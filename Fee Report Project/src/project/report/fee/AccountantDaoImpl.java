@@ -10,11 +10,13 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Scanner;
-
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 public class AccountantDaoImpl implements AccountantDao {
 
-	Accountant accountant=new Accountant();
-	Scanner sc=new Scanner(System.in);
+	
 	ArrayList<Accountant> accnt=new ArrayList<Accountant>();
 	File file=new File("/home/vishal/eclipse-workspace/Fee Report Project/AccountantData.txt");
 	ObjectOutputStream os=null;
@@ -24,25 +26,11 @@ public class AccountantDaoImpl implements AccountantDao {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void addAccountant() {
-		System.out.println(file.exists());
-		System.out.println("Please provide following details.");
-		System.out.println("Name:");
-		String aname = sc.next();
-		accountant.setAName(aname);
-		//accountant.setAName(sc.next());
-		System.out.println("Password:");
-		String apass = sc.next();
-		accountant.setAPassword(apass);
-		//accountant.setAPassword(sc.next());
-		System.out.println("Email:");
-		String aemail = sc.next();
-		accountant.setAEmail(aemail);
-		//accountant.setAEmail(sc.next());
-		System.out.println("Contact:");
-		int acontact = sc.nextInt();
-		accountant.setAContact(acontact);
-		//accountant.setAContact(sc.nextInt());
+	public boolean addAccountant(Accountant accountant) {
+
+		boolean b=false;
+		if(FeeReport.check)
+		{
 		try
 		   {
 			is=new ObjectInputStream(new FileInputStream(file));
@@ -55,15 +43,34 @@ public class AccountantDaoImpl implements AccountantDao {
 			System.out.println("\n Accountant add in File \n");
       }
 		catch(Exception e){e.printStackTrace();}
-		
-		
+		}
+		else
+		{
+			try
+			{
+				Class.forName("com.mysql.cj.jdbc.Driver");
+				Connection c=DriverManager.getConnection("jdbc:mysql://localhost/feereport","root","password");
+				String sqlq = "INSERT INTO accountant(name,password,email,contact) values (?, ?, ?, ?)";
+	            PreparedStatement st = c.prepareStatement(sqlq);
+	            st.setString(1,accountant.getAName());
+	            st.setString(2,accountant.getAPassword());
+	            st.setString(3,accountant.getAEmail());
+	            st.setLong(4,accountant.getAContact());
+	            b=true;
+			}
+			catch(Exception k){System.out.println(k);}
+		}
+		return b;
 	
 		
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void viewAccountant() {
+	public ArrayList<Accountant> viewAccountant() {
+		accnt.clear();
+		if(FeeReport.check)
+		{
 		try
 		{
 			is=new ObjectInputStream(new FileInputStream(file));
@@ -71,27 +78,44 @@ public class AccountantDaoImpl implements AccountantDao {
 			is.close();
 		}
 		catch(Exception e){e.printStackTrace();}
-		for(int i=0;i<accnt.size();i++)
-		{
-			System.out.print("Name = "+accnt.get(i).getAName()+"\t");
-			System.out.print("Password = "+accnt.get(i).getAPassword()+"\t");
-			System.out.print("Email = "+accnt.get(i).getAEmail()+"\t");			
-			System.out.print("Contact = "+accnt.get(i).getAContact()+"\n");
 		}
-		System.out.println();
 
+		else
+		{
+			try
+			{
+				Class.forName("com.mysql.cj.jdbc.Driver");
+				Connection c=DriverManager.getConnection("jdbc:mysql://localhost/feereport","root","password");
+			    java.sql.Statement selectStmt = c.createStatement();
+			    ResultSet rs = ((java.sql.Statement) selectStmt).executeQuery("SELECT * FROM accountant");
+			    while(rs.next()) { 
+			    	Accountant accountant=new Accountant();
+					  accountant.setAName(rs.getString(1));
+					  accountant.setAPassword(rs.getString(2));
+					  accountant.setAEmail(rs.getString(3));
+					  accountant.setAContact(rs.getLong(4));
+					  accnt.add(accountant);
+			    }    
+			}
+			catch(Exception e){e.printStackTrace();}
+		}
+return accnt;
 	}
 
 	@Override
 	public boolean checkLoginA(String Name, String Password) {
 		boolean a=false;
+		String databasepass=null;
+		if(FeeReport.check)
+		{
 		try {
-			is=new ObjectInputStream(new FileInputStream(file));
+			ObjectInputStream is=new ObjectInputStream(new FileInputStream(file));
 		
 		
 			accnt=(ArrayList<Accountant>)is.readObject();
 			
 			is.close();
+			ListIterator<Accountant>
 			li=accnt.listIterator();
 			while(li.hasNext())
 			{
@@ -99,12 +123,7 @@ public class AccountantDaoImpl implements AccountantDao {
 				if(b.getAName().equals(Name))
 					if(b.getAPassword().equals(Password))
 						a=true;
-				else
-				{
-					a=false;
-					System.out.println(b.getAName());
-					System.out.println(b.getAPassword());
-				}
+
 				
 			}
 		}
@@ -119,7 +138,26 @@ public class AccountantDaoImpl implements AccountantDao {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	
+		}
+		else
+		{
+			try
+			{
+				Class.forName("com.mysql.cj.jdbc.Driver");
+				Connection c=DriverManager.getConnection("jdbc:mysql://localhost/feereport","root","password");
+				String sqlq =("SELECT password FROM accountant WHERE name=?");
+				PreparedStatement st= c.prepareStatement(sqlq);
+				st.setString(1, Name);
+				ResultSet rs = st.executeQuery(); 
+			    while(rs.next())
+		    	{    
+			    	databasepass=rs.getString(1);   	  
+		    	}
+			}
+			catch(Exception k){k.printStackTrace();}
+			if(databasepass.equals(Password))
+				a=true;
+		}
 	
 		
 		return a;

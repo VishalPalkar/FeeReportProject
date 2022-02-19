@@ -5,7 +5,7 @@ public class Accountant implements Serializable {
 	private String AName;
 	private String APassword;
 	private String AEmail;
-	private int AContact;
+	private long AContact;
 	public String getAName()
 	{
 		return AName;
@@ -36,11 +36,11 @@ public class Accountant implements Serializable {
 		
 		
 	}
-	public int getAContact()
+	public long getAContact()
 	{
 		return AContact;
 	}
-	public void setAContact(int acontact)
+	public void setAContact(long acontact)
 	{
 		AContact=acontact;
 		

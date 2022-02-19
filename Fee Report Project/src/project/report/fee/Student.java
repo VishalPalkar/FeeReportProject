@@ -3,6 +3,8 @@ package project.report.fee;
 import java.io.Serializable;
 
 public class Student implements Serializable {
+	private int id;
+	
 	private String name;
 	private String email;
 	private String course;
@@ -13,7 +15,7 @@ public class Student implements Serializable {
 	private String city;
 	private String state;
 	private String country;
-	private int contact;
+	private long contact;
 	public String getName() {
 		return name;
 	}
@@ -74,11 +76,17 @@ public class Student implements Serializable {
 	public void setCountry(String country) {
 		this.country = country;
 	}
-	public int getContact() {
+	public long getContact() {
 		return contact;
 	}
-	public void setContact(int contact) {
-		this.contact = contact;
+	public void setContact(long l) {
+		this.contact = l;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
 	}
 	
 }
